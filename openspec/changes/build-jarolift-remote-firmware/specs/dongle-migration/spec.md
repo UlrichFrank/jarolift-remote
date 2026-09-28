@@ -77,7 +77,7 @@ counter of the device after the takeover.
 
 ### Requirement: Staged verification
 After the takeover is finished, the procedure SHALL verify one shutter and then one group before the
-consumers in `home-new` are switched to the new topics. The group check also confirms that the
+consumers on the home server are switched to the new topics. The group check also confirms that the
 motors taught to the old dongle follow a bitmask group telegram; if they do not, the old group
 channels stay in use until that is resolved.
 
@@ -92,7 +92,7 @@ channels stay in use until that is resolved.
 ### Requirement: Documented rollback
 The procedure SHALL document a rollback. Before the dongle is switched off, it is to cancel the
 takeover and keep the dongle. After that, the dongle's counter has to be set above the device's
-counter before the dongle is powered on again, and the `home-new` consumers have to be reverted.
+counter before the dongle is powered on again, and the consumers on the home server have to be reverted.
 
 #### Scenario: Rollback after cut-over
 - **WHEN** a rollback is needed after the new device has transmitted

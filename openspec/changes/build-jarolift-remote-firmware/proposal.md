@@ -6,7 +6,7 @@ The Jarolift shutters are driven by a 2017-era ESP8266 dongle (`../Jarolift_MQTT
 open / shade / closed, publishes its command echo un-retained on Tasmota-style topics
 (`cmd/…`, `stat/…`, `tele/…`), and needs a rule in the cluster (`shutterState` in
 `UlrichFrank/mqtt-rules`) to turn that echo into a usable position — including fanning the Jarolift
-group channels out onto their members. The homeserver (`../home-new`) is moving to k0s with a
+group channels out onto their members. The home server is moving to k0s with a
 normative topic contract (`docs/topic-tree.md`); the dongle is the last device that does not fit it.
 
 Rebuilding the firmware on the Olimex ESP32-PoE lets the device itself be the gateway: it speaks the
@@ -39,7 +39,7 @@ cluster.
 - The rolling code counter becomes per channel instead of one shared counter.
 - The crypto identity (master key, serial prefix, learn mode) and counter are migrated from the
   running dongle so no motor has to be re-taught.
-- No Home Assistant discovery: Home Assistant is retired in `home-new` (design D5); the consumers are
+- No Home Assistant discovery: Home Assistant is retired on the home server (design D5); the consumers are
   the HomeKit bridge and `mqtt-rules`.
 
 ## Capabilities
@@ -52,7 +52,7 @@ cluster.
   travel times, group channels fanning out onto member estimates, and correction from received
   hand-transmitter telegrams.
 - `mqtt-interface`: The topic and payload contract on the broker — bridge liveness, per-shutter and
-  per-group state and command topics, retain and QoS rules — conforming to `home-new`'s
+  per-group state and command topics, retain and QoS rules — conforming to the home server's
   `docs/topic-tree.md`.
 - `device-runtime`: The ESPHome node itself — Ethernet, broker connection, settings persistence,
   OTA and safe mode, logging, and recovery paths.
@@ -75,7 +75,7 @@ None. This repository has no existing specs.
 - **Hardware**: Olimex ESP32-PoE, CC1101 shield from `../ESP32POE_SomfyRTS`, 433 MHz antenna, PoE
   port. The device's USB port must stay physically reachable.
 - **Dependencies**: ESPHome (version pinned), a Keeloq implementation.
-- **`../home-new` (configuration only, no new service)**:
+- **Home server configuration (configuration only, no new service)**:
   - `charts/mqtt/homekit/values/values.yaml` — the nine window coverings point at the new topics;
     the `factor: -1, offset: 100` inversion goes away.
   - `UlrichFrank/mqtt-rules` — schedules move from `cmd/jarolift/shutter/9` to the group topic; the

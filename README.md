@@ -22,7 +22,7 @@ re-teaching any motor. Planning and requirements live in
 - ESPHome as pinned in `requirements.txt` (`pip install -r requirements.txt`, or Homebrew's
   `esphome` at that version). Re-verify `set_open_duration` / `set_close_duration` and
   `has_built_in_endstop` of the `time_based` cover before bumping it.
-- `sops` with the age key listed in `.sops.yaml` (the same key as `../heatingmonitor`).
+- `sops` with the age key listed in `.sops.yaml`.
 - CMake and a C++17 compiler for the host tests.
 
 ## Secrets

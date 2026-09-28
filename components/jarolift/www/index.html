@@ -216,7 +216,7 @@ dialog .dfoot { display: flex; gap: 8px; justify-content: flex-end; padding: 0 1
   <details class="sec" data-sec="tls"><summary>HTTPS-Zertifikat</summary><div class="body">
     <form id="tlsForm" autocomplete="off">
       <table class="kv"><tr><td>Inhaber</td><td id="tSubject">…</td></tr><tr><td>Aussteller</td><td id="tIssuer">…</td></tr><tr><td>Gültig bis</td><td id="tExpiry">…</td></tr></table>
-      <p class="hint">Normalerweise lädt der Zertifikats-Job aus home-new das Let's-Encrypt-Zertifikat automatisch hoch.</p>
+      <p class="hint">Normalerweise lädt der Zertifikats-Job des Homeservers das Let's-Encrypt-Zertifikat automatisch hoch.</p>
       <div class="grid">
         <div class="field"><label for="tls_certificate">Zertifikatskette (PEM)</label><textarea id="tls_certificate" name="certificate" spellcheck="false"></textarea></div>
         <div class="field"><label for="tls_key">Privater Schlüssel (PEM)</label><textarea id="tls_key" name="private_key" spellcheck="false"></textarea><div class="err" data-err="certificate"></div></div>

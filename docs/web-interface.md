@@ -20,7 +20,7 @@ loaded from the internet.
 
 Until a certificate is installed, the device serves a self-signed one it generated on first start
 (browser warning). The Let's Encrypt certificate for `jarolift.example.com` is pushed by the
-certificate job in `home-new` (see `/api/tls` below).
+certificate job on the home server (see `/api/tls` below).
 
 ## API
 

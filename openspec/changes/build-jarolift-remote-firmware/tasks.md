@@ -3,7 +3,7 @@
 ## 1. Project scaffolding
 
 - [x] 1.1 Create the ESPHome node `jarolift-remote.yaml` for the Olimex ESP32-PoE (ESP-IDF framework, LAN8720 pins from the design, logger, OTA with password, safe mode, preferences) with a pinned ESPHome version in `requirements.txt`, and verify `esphome config jarolift-remote.yaml` succeeds
-- [x] 1.2 Add `secrets.example.yaml` with every secret key (master MSB/LSB, serial prefix, learn mode, OTA password, web credentials, broker URL/user/password, default static network), a `.sops.yaml` like `../heatingmonitor`, and a `.gitignore` that excludes the plain `secrets.yaml`; verify `esphome config` resolves all `!secret` references against the example
+- [x] 1.2 Add `secrets.example.yaml` with every secret key (master MSB/LSB, serial prefix, learn mode, OTA password, web credentials, broker URL/user/password, default static network), a `.sops.yaml`, and a `.gitignore` that excludes the plain `secrets.yaml`; verify `esphome config` resolves all `!secret` references against the example
 - [x] 1.3 Create the external component skeleton `components/jarolift/` (`__init__.py`, header, source) that ESPHome loads, and verify `esphome compile jarolift-remote.yaml` builds
 - [x] 1.4 Set up host unit tests (`tests/` with CMake and doctest) that compile the device-independent C++ sources, and verify `cmake -S tests -B build/tests && cmake --build build/tests && ctest --test-dir build/tests` runs one passing placeholder test
 - [x] 1.5 Write `README.md` with build, flash (without `erase-flash`), OTA and host-test commands, and verify each documented command runs as written
@@ -81,12 +81,12 @@
 - [ ] 9.5 Implement the takeover in the device (Decision 12): read the dongle twice over its web API, preview without the key, apply identity, labels (group labels by matching topic) and counter + margin, transmit lock that survives restarts, 15 s tracking of the dongle's counter, finish refused while the dongle answers (force with warning); verify against the running dongle and, for finishing, with the dongle switched off
 - [ ] 9.4 Execute the migration: Settings → takeover from `192.0.2.20` (read, apply), power off the dongle permanently, finish the takeover, verify one shutter then group `alle`; record the counter in the offline record
 
-## 10. Consumers in `../home-new`
+## 10. Consumers on the home server
 
 - [ ] 10.1 Point the nine HomeKit window coverings in `charts/mqtt/homekit/values/values.yaml` at `jarolift/<name>/position`, `/state`, `/set` and drop `factor: -1, offset: 100`; verify the rendered chart with `helm template`
 - [ ] 10.2 Move the `mqtt-rules` schedules to `jarolift/alle/set`, retire `shutterState` and update `cover.Cover` to the new topics; verify the rules repo's tests pass
 - [ ] 10.3 Replace the legacy wildcards in `charts/observability/mqtt-logger` with `jarolift/#`, and rewrite `docs/topic-tree.md` §4b and `docs/device-inventory.md`; verify `helm template` renders and the docs list all shutter and group topics
-- [ ] 10.4 Add `charts/infrastructure/device-cert-push` to `../home-new`: a cert-manager `Certificate` for `jarolift.example.com` (ECDSA P-256, netcup DNS-01 issuer) and a CronJob that compares the device's `GET /api/tls` with the issued certificate and pushes it via `POST /api/tls` when they differ; plus a LAN DNS record and a fixed address for the device. Verified so far: `helm template` renders, and the push script against the device (skip when current, push on renewal, chain verifies with hostname). Still open: deployment and a browser showing the Let's Encrypt certificate
+- [ ] 10.4 Add `charts/infrastructure/device-cert-push` to the home server configuration: a cert-manager `Certificate` for `jarolift.example.com` (ECDSA P-256, netcup DNS-01 issuer) and a CronJob that compares the device's `GET /api/tls` with the issued certificate and pushes it via `POST /api/tls` when they differ; plus a LAN DNS record and a fixed address for the device. Verified so far: `helm template` renders, and the push script against the device (skip when current, push on renewal, chain verifies with hostname). Still open: deployment and a browser showing the Let's Encrypt certificate
 
 ## 11. Integration checks
 

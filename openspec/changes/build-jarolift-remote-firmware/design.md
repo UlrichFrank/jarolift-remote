@@ -13,7 +13,7 @@ UP/DOWN/STOP send two repetitions (~234 ms). Measured from `../Jarolift_MQTT/Jar
 *i* has serial `(prefix << 8) + i`. Together with the 64-bit master key and the learn-mode flag,
 that is everything that must survive migration.
 
-**Channels in this house** (`../home-new/docs/topic-tree.md` §4b). There are nine shutters and five
+**Channels in this house** (`docs/topic-tree.md` §4b of the home server configuration). There are nine shutters and five
 group channels, not sixteen shutters:
 
 ```
@@ -37,11 +37,11 @@ frame moves all members at once. The nightly schedules drive channel 9.
 on SCLK 14 / CSN 13 / MOSI 15 / MISO 16, radio TX on GPIO 4, RX on GPIO 36 (input-only), Ethernet
 LAN8720 on clock 17 / power 12 / MDC 23 / MDIO 18.
 
-**Consumers** (`../home-new`). Home Assistant is retired (D5). The broker is Mosquitto on the pinned
+**Consumers** (home server). Home Assistant is retired (D5). The broker is Mosquitto on the pinned
 MetalLB address `192.0.2.10:1883`. Consumers are the HomeKit bridge (mqtt-homekit: `{{value}}`
 templates, `factor`/`offset`, JSON `path`; no expression engine), `mqtt-rules`, `mqtt-logger`, and
 `mqtt-alerting` (watches `+/bridge/state` for `offline`). Precedent for a device that is its own
-gateway: the `heatingmonitor` ESPHome node publishing `owserver/heating/*` directly.
+gateway: an existing ESPHome node publishing `owserver/heating/*` directly.
 
 ## Goals / Non-Goals
 
@@ -71,7 +71,7 @@ gateway: the `heatingmonitor` ESPHome node publishing `owserver/heating/*` direc
 
 `hs100-to-mqtt-gw` needs a pod because TP-Link plugs do not speak MQTT. The ESP32 does, so a
 translator in the cluster would only add a hop, a deployment and a failure mode. The firmware
-publishes the contract directly, like `heatingmonitor` and ESPSomfy RTS already do.
+publishes the contract directly, like other ESPHome nodes and ESPSomfy RTS already do.
 
 *Consequence.* Everything the `shutterState` rule does today — mirroring the echo retained, fanning
 group channels out — moves into the firmware. The cluster keeps only configuration that points at
@@ -257,7 +257,7 @@ The page and its API (with basic auth) are served by ESP-IDF's `esp_https_server
 pair the device generates a self-signed ECDSA P-256 certificate on first start, so HTTPS works from
 the beginning.
 
-The trusted certificate comes from the cluster: `home-new` gets a cert-manager `Certificate` for
+The trusted certificate comes from the cluster: the home server gets a cert-manager `Certificate` for
 `jarolift.example.com` only (not the wildcard key, which must not sit on an IoT device), issued by
 the existing netcup DNS-01 issuer, and a small CronJob (every 6 h) that compares the device's
 `GET /api/tls` (expiry, self-signed) with the issued certificate and posts chain and key to
@@ -297,7 +297,7 @@ sequence as the normal path; `tools/read_dongle.py` remains for a record outside
   all nine shutters, which bounds drift to one day.
 - [ESPHome upgrades change `time_based` internals] → pin the ESPHome version; re-verify the two
   setters and `has_built_in_endstop` after upgrades.
-- [Master key exposure] → `secrets.yaml`, SOPS-encrypted like `../heatingmonitor`, never an entity;
+- [Master key exposure] → `secrets.yaml`, SOPS-encrypted, never an entity;
   write-only in the web interface.
 - [A wrong network or broker setting locks the operator out] → the web interface stays on the
   Ethernet address regardless of the broker; static-address mistakes are fixed by USB flash with a
@@ -319,7 +319,7 @@ sequence as the normal path; `tools/read_dongle.py` remains for a record outside
    keeps tracking the dongle's counter until it is switched off).
 4. **Power off the old dongle permanently.**
 5. **Verify one channel**, then one group.
-6. **Switch the consumers** in `../home-new`: HomeKit values, `mqtt-rules` (schedules to the group
+6. **Switch the consumers** on the home server: HomeKit values, `mqtt-rules` (schedules to the group
    topic, retire `shutterState`), `mqtt-logger` allowlist, `docs/topic-tree.md` §4b.
 7. **Calibrate travel times** per shutter and direction at runtime.
 

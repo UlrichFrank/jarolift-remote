@@ -3,7 +3,7 @@
 ## Purpose
 
 Defines the topics and payloads the device uses on the house broker under the `jarolift/` root,
-following `home-new`'s `docs/topic-tree.md`, for the HomeKit bridge, `mqtt-rules`, `mqtt-logger`
+following the house topic contract (`docs/topic-tree.md`), for the HomeKit bridge, `mqtt-rules`, `mqtt-logger`
 and `mqtt-alerting`.
 
 ## ADDED Requirements

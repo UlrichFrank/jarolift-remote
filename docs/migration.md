@@ -2,7 +2,7 @@
 
 Moves the Jarolift crypto identity and rolling counter from the old dongle (madmartin/Jarolift_MQTT,
 fork `UlrichFrank/Jarolift_MQTT`, at `192.0.2.20`) to this device, so that no motor has to be taught
-again, and switches the consumers in `../home-new` to the new topics.
+again, and switches the consumers on the home server to the new topics.
 
 **The one rule:** the old dongle and this device must never both transmit. Both use one rolling
 counter for all channels; the motors accept only rising values. The takeover enforces this: after
@@ -70,7 +70,7 @@ activate it and click **Abmelden** — every motor that knows it forgets it — 
 
 ## 6. Switch the consumers
 
-In `../home-new`, in one rollout together with the device:
+In the home server configuration, in one rollout together with the device:
 
 - `charts/mqtt/homekit/values/values.yaml`: the nine window coverings to
   `jarolift/<name>/position`, `/state`, `/set`; remove `factor: -1, offset: 100`.
@@ -92,4 +92,4 @@ Check with a move to 50 % that it stops visibly at half height.
   the device can stay locked or be reset.
 - **After step 3.1:** the device has advanced the counter. Before the dongle transmits again, set
   its device counter above the device's counter (dongle web UI → System → device counter, "save new
-  device counter"), power the device off, and revert the consumers in `home-new`.
+  device counter"), power the device off, and revert the consumers on the home server.
