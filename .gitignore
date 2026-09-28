@@ -1,0 +1,7 @@
+# Decrypted secrets - only secrets.enc.yaml is committed
+secrets.yaml
+.esphome/
+build/
+__pycache__/
+# Flash backups contain WiFi credentials
+backup/

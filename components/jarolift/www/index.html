@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jarolift Remote</title>
+<style>
+:root {
+  --bg: #f3f4f6; --panel: #fff; --text: #1d2330; --muted: #667085; --line: #e1e4ea;
+  --accent: #3f5c8f; --accent-text: #fff; --btn: #e6e9f0; --btn-hover: #d7dce7; --danger: #c4372b; --ok: #1f8a4c;
+  --warn: #b7791f; --bar: #d8dfeb; --bar-fill: #3f5c8f; --input: #fff; --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141821; --panel: #1f2533; --text: #e6e8eb; --muted: #98a0ab; --line: #303849;
+    --accent: #5b78ad; --accent-text: #fff; --btn: #3a4459; --btn-hover: #46526b; --danger: #ef6b5e; --ok: #4cc27f;
+    --warn: #e0a84a; --bar: #2c3548; --bar-fill: #6f8fc9; --input: #171c27;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+header { background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+.top { display: flex; align-items: center; gap: 16px; min-height: 52px; flex-wrap: wrap; }
+.brand { font-weight: 650; }
+nav { display: flex; gap: 2px; flex-wrap: wrap; }
+nav a { color: var(--muted); text-decoration: none; padding: 14px 11px; border-bottom: 2px solid transparent; }
+nav a.active { color: var(--text); border-bottom-color: var(--accent); }
+.pill { margin-left: auto; font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.dot.ok { background: var(--ok); } .dot.bad { background: var(--danger); } .dot.warn { background: var(--warn); }
+main { padding: 20px 0 48px; }
+section.page { display: none; } section.page.active { display: block; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+h3 { font-size: 15px; margin: 0 0 10px; }
+.muted { color: var(--muted); }
+.hint { font-size: 13px; color: var(--muted); margin: 6px 0; }
+.banner { border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; border: 1px solid var(--warn); background: var(--panel); }
+.banner:empty { display: none; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+.card .title { font-weight: 600; text-align: center; margin-bottom: 2px; }
+.card .sub { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 10px; min-height: 16px; overflow-wrap: anywhere; }
+.bar { height: 8px; background: var(--bar); border-radius: 4px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--bar-fill); transition: width .8s linear; }
+.state { font-size: 13px; color: var(--muted); text-align: center; margin: 5px 0 10px; }
+.btnrow { display: flex; gap: 8px; justify-content: center; }
+.ibtn { width: 52px; height: 44px; border: 0; border-radius: 8px; background: var(--btn); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.ibtn:hover { background: var(--btn-hover); }
+.ibtn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.posrow { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+.posrow input { width: 80px; }
+button { font: inherit; border: 0; background: var(--btn); color: var(--text); border-radius: 7px; padding: 6px 12px; cursor: pointer; }
+button:hover { background: var(--btn-hover); }
+button.primary { background: var(--accent); color: var(--accent-text); }
+button.danger { color: var(--danger); }
+button.danger.solid { background: var(--danger); color: #fff; }
+button:disabled { opacity: .45; cursor: default; }
+input, select, textarea { font: inherit; color: var(--text); background: var(--input); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; width: 100%; }
+textarea { min-height: 110px; font: 12px/1.4 ui-monospace, Menlo, monospace; }
+input[type=checkbox] { width: auto; }
+input.invalid, textarea.invalid { border-color: var(--danger); }
+label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.field { margin-bottom: 12px; }
+.err { color: var(--danger); font-size: 12px; margin-top: 2px; }
+.err:empty { display: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+details.sec { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; }
+details.sec > summary { cursor: pointer; padding: 14px 16px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: "›"; color: var(--muted); transition: transform .15s; }
+details.sec[open] > summary::after { transform: rotate(90deg); }
+details.sec > .body { padding: 0 16px 16px; }
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; flex: none; margin: 0; }
+.switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.switch span { position: absolute; inset: 0; background: var(--btn); border-radius: 11px; transition: background .15s; cursor: pointer; }
+.switch span::before { content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .15s; }
+.switch input:checked + span { background: var(--accent); }
+.switch input:checked + span::before { transform: translateX(18px); }
+.srow { display: grid; grid-template-columns: 64px minmax(140px, 1.4fr) minmax(120px, 1fr) 72px 72px 372px 44px; gap: 8px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.srow:last-child { border-bottom: 0; }
+.srow .ch { padding-top: 7px; color: var(--muted); font-size: 13px; }
+.srow .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.srow .sw { padding-top: 5px; }
+.srow.off input:not([type=checkbox]) { opacity: .55; }
+.srow.head { font-size: 12px; color: var(--muted); padding-top: 0; }
+.grow { grid-template-columns: 44px minmax(140px, 1fr) minmax(120px, 1fr) minmax(180px, 1.6fr); }
+.members { font-size: 13px; padding-top: 3px; }
+.mask { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); letter-spacing: .5px; }
+table.kv { border-collapse: collapse; }
+table.kv td { padding: 3px 12px 3px 0; vertical-align: top; }
+table.kv td:first-child { color: var(--muted); }
+pre.log { background: var(--input); border: 1px solid var(--line); border-radius: 7px; padding: 10px; height: 62vh; overflow: auto; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.45 ui-monospace, Menlo, monospace; }
+code { font: 13px ui-monospace, Menlo, monospace; }
+#toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 7px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px); z-index: 40; }
+#toast.show { opacity: 1; } #toast.bad { background: var(--danger); color: #fff; }
+dialog { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--text); padding: 0; max-width: 460px; width: calc(100% - 32px); }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog .dbody { padding: 18px; }
+dialog .dfoot { display: flex; gap: 8px; justify-content: flex-end; padding: 0 18px 18px; }
+.wiz { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; max-height: 55vh; overflow: auto; margin: 10px 0; }
+.wiz label { margin: 0; color: var(--text); font-size: 15px; }
+@media (max-width: 760px) {
+  .srow { grid-template-columns: 60px 1fr 44px; }
+  .srow .topic, .srow .dur, .srow .acts { grid-column: 2 / 3; }
+  .srow.head { display: none; }
+  .grow { grid-template-columns: 44px 1fr; }
+  .grow > * { grid-column: 2 / 3; } .grow > .sw { grid-column: 1 / 2; grid-row: 1; }
+  nav a { padding: 10px 7px; } .pill { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<header><div class="wrap top">
+  <div class="brand">Jarolift Remote</div>
+  <nav>
+    <a href="#shutters" data-page="shutters">Rollläden</a>
+    <a href="#groups" data-page="groups">Gruppen</a>
+    <a href="#settings" data-page="settings">Einstellungen</a>
+    <a href="#system" data-page="system">System</a>
+    <a href="#log" data-page="log">Log</a>
+  </nav>
+  <div class="pill"><span class="dot" id="brokerDot"></span><span id="brokerPill">…</span></div>
+</div></header>
+
+<main class="wrap">
+<div class="banner" id="banner"></div>
+
+<section class="page" id="page-shutters"><div class="cards" id="shutterCards"></div></section>
+<section class="page" id="page-groups"><div class="cards" id="groupCards"></div></section>
+
+<section class="page" id="page-settings">
+  <details class="sec" data-sec="shutters" open><summary>Rollläden</summary><div class="body">
+    <p class="hint">Bezeichnung, Topic und „aktiv“ werden beim Verlassen des Feldes gespeichert. Das Topic ist der MQTT-Name
+      (<code>jarolift/&lt;topic&gt;/…</code>, nur a–z, 0–9, „-“); leer lassen, dann wird es aus der Bezeichnung gebildet.</p>
+    <p class="hint"><b>Anlernen:</b> Anlerntaste am Motor drücken (oder die Sicherung kurz aus- und wieder einschalten) –
+      der Motor vibriert. Dann innerhalb von 5 Sekunden „Anlernen“ klicken; der Motor bestätigt mit erneutem Vibrieren.
+      Alternativ an einem bereits eingelernten Handsender AUF und AB gleichzeitig, danach 8× STOP drücken.
+      <span id="learnModeHint"></span></p>
+    <p class="hint">Kanäle, die der alte Dongle als Gruppe genutzt hat (z. B. „Alle“), sind noch in mehreren Motoren
+      angelernt. Soll so ein Kanal später einen einzelnen Rollladen steuern, ihn vorher aktivieren und „Abmelden“ –
+      sonst fahren alle Motoren mit, die ihn kennen.</p>
+    <div class="srow head"><div>Kanal</div><div>Bezeichnung</div><div>Topic</div><div>Auf (s)</div><div>Zu (s)</div><div></div><div>aktiv</div></div>
+    <div id="shutterRows"></div>
+  </div></details>
+
+  <details class="sec" data-sec="groups"><summary>Gruppen</summary><div class="body">
+    <p class="hint">Eine Gruppe fährt alle Mitglieder mit einem einzigen Funkbefehl (Kanal-Bitmaske). Gruppen müssen nicht angelernt werden.</p>
+    <div class="srow grow head"><div>aktiv</div><div>Bezeichnung</div><div>Topic</div><div>Mitglieder</div></div>
+    <div id="groupRows"></div>
+  </div></details>
+
+  <details class="sec" data-sec="migration"><summary>Übernahme vom alten Dongle</summary><div class="body">
+    <p class="hint">Übernimmt Master-Key, Seriennummer-Präfix, Anlernmodus, Zähler und Kanalnamen vom laufenden
+      ESP8266-Dongle, damit kein Motor neu angelernt werden muss. Danach sendet dieses Gerät nichts, bis du bestätigst,
+      dass der Dongle dauerhaft ausgeschaltet ist; bis dahin folgt der eigene Zähler dem des Dongles.</p>
+    <div id="migActive"></div>
+    <div id="migForm">
+      <div class="row" style="align-items:flex-end">
+        <div class="field" style="flex:1; min-width:200px; margin:0"><label for="migHost">IP-Adresse des Dongles</label><input id="migHost" placeholder="192.0.2.20" spellcheck="false"><div class="err" id="migHostErr"></div></div>
+        <button id="migRead">Dongle auslesen</button>
+      </div>
+      <div id="migPreview"></div>
+    </div>
+  </div></details>
+
+  <details class="sec" data-sec="jarolift"><summary>Jarolift</summary><div class="body">
+    <form id="jaroForm" autocomplete="off">
+      <div class="grid">
+        <div class="field"><label for="master_msb">Master-Key MSB</label><input id="master_msb" name="master_msb" type="password" placeholder="unverändert"><div class="err" data-err="master_msb"></div></div>
+        <div class="field"><label for="master_lsb">Master-Key LSB</label><input id="master_lsb" name="master_lsb" type="password" placeholder="unverändert"><div class="err" data-err="master_lsb"></div></div>
+        <div class="field"><label for="learn_mode_new">Anlernmodus</label><select id="learn_mode_new" name="learn_mode_new"><option value="true">neu (ab 2010: AUF+AB, dann STOP)</option><option value="false">alt (LEARN-Taste)</option></select></div>
+        <div class="field"><label for="serial_prefix">Seriennummer-Präfix</label><input id="serial_prefix" name="serial_prefix" spellcheck="false"><div class="err" data-err="serial_prefix"></div></div>
+      </div>
+      <p class="hint" id="keyHint"></p>
+      <button class="primary" type="submit">Speichern</button>
+    </form>
+    <hr style="border:0; border-top:1px solid var(--line); margin:16px 0">
+    <form id="counterForm" autocomplete="off" class="row" style="align-items:flex-end">
+      <div class="field" style="margin:0; width:200px"><label for="counter">Rolling-Code-Zähler (nächster Wert)</label><input id="counter" name="counter" type="number" min="0" max="65535"><div class="err" data-err="counter"></div></div>
+      <button type="submit">Zähler setzen</button>
+      <p class="hint" style="flex-basis:100%">Ein Zähler für alle Kanäle und Gruppen, wie beim alten Dongle. Senken kann dazu führen, dass Motoren nicht mehr reagieren.</p>
+    </form>
+  </div></details>
+
+  <details class="sec" data-sec="network"><summary>Netzwerk</summary><div class="body">
+    <form id="netForm" autocomplete="off">
+      <div class="field row"><label class="switch"><input type="checkbox" id="dhcp" name="dhcp"><span></span></label><span>DHCP verwenden</span></div>
+      <div class="grid" id="staticFields">
+        <div class="field"><label for="ip">IP-Adresse</label><input id="ip" name="ip"><div class="err" data-err="ip"></div></div>
+        <div class="field"><label for="subnet">Netzmaske</label><input id="subnet" name="subnet"><div class="err" data-err="subnet"></div></div>
+        <div class="field"><label for="gateway">Gateway</label><input id="gateway" name="gateway"><div class="err" data-err="gateway"></div></div>
+        <div class="field"><label for="dns">DNS-Server</label><input id="dns" name="dns"><div class="err" data-err="dns"></div></div>
+      </div>
+      <p class="hint">Wird nach einem Neustart wirksam.</p>
+      <button class="primary" type="submit">Speichern</button>
+    </form>
+  </div></details>
+
+  <details class="sec" data-sec="mqtt"><summary>MQTT</summary><div class="body">
+    <form id="mqttForm" autocomplete="off">
+      <div class="field"><label for="broker_url">Broker</label><input id="broker_url" name="broker_url" placeholder="mqtt://192.0.2.10:1883" spellcheck="false">
+        <div class="hint">[mqtt|mqtts|ws|wss://]host[:port][/pfad] – IP-Adresse oder Hostname. Leer = keine Broker-Verbindung.</div>
+        <div class="err" data-err="broker_url"></div></div>
+      <div class="grid">
+        <div class="field"><label for="mqtt_username">Benutzer (optional)</label><input id="mqtt_username" name="mqtt_username"></div>
+        <div class="field"><label for="mqtt_password">Passwort (optional)</label><input id="mqtt_password" name="mqtt_password" type="password" placeholder="unverändert"><div class="hint" id="pwHint"></div></div>
+        <div class="field"><label for="client_id">Client-ID</label><input id="client_id" name="client_id"><div class="err" data-err="client_id"></div></div>
+      </div>
+      <div class="field" id="caField"><label for="ca_certificate">CA-Zertifikat (PEM, nur mqtts/wss)</label><textarea id="ca_certificate" name="ca_certificate" placeholder="leer = öffentliche Root-CAs" spellcheck="false"></textarea><div class="err" data-err="ca_certificate"></div></div>
+      <div class="row"><button class="primary" type="submit">Speichern und verbinden</button><button type="button" id="clearPw">Passwort löschen</button></div>
+    </form>
+  </div></details>
+
+  <details class="sec" data-sec="tls"><summary>HTTPS-Zertifikat</summary><div class="body">
+    <form id="tlsForm" autocomplete="off">
+      <table class="kv"><tr><td>Inhaber</td><td id="tSubject">…</td></tr><tr><td>Aussteller</td><td id="tIssuer">…</td></tr><tr><td>Gültig bis</td><td id="tExpiry">…</td></tr></table>
+      <p class="hint">Normalerweise lädt der Zertifikats-Job aus home-new das Let's-Encrypt-Zertifikat automatisch hoch.</p>
+      <div class="grid">
+        <div class="field"><label for="tls_certificate">Zertifikatskette (PEM)</label><textarea id="tls_certificate" name="certificate" spellcheck="false"></textarea></div>
+        <div class="field"><label for="tls_key">Privater Schlüssel (PEM)</label><textarea id="tls_key" name="private_key" spellcheck="false"></textarea><div class="err" data-err="certificate"></div></div>
+      </div>
+      <button class="primary" type="submit">Zertifikat installieren</button>
+    </form>
+  </div></details>
+
+  <details class="sec" data-sec="maintenance"><summary>Wartung</summary><div class="body">
+    <div class="row"><button class="danger" id="restart">Neustart</button><span class="hint">Einstellungen, Zähler und Positionen bleiben erhalten; kein Rollladen fährt.</span></div>
+  </div></details>
+</section>
+
+<section class="page" id="page-system">
+  <div class="cards">
+    <div class="card"><h3>Gerät</h3><table class="kv">
+      <tr><td>Firmware</td><td id="sFirmware">…</td></tr><tr><td>IP-Adresse</td><td id="sIp">…</td></tr>
+      <tr><td>Netzwerk</td><td id="sNet">…</td></tr><tr><td>Laufzeit</td><td id="sUptime">…</td></tr>
+      <tr><td>Letzter Neustart</td><td id="sReset">…</td></tr><tr><td>Funkmodul</td><td id="sRadio">…</td></tr>
+      <tr><td>Zähler</td><td id="sCounter">…</td></tr></table></div>
+    <div class="card"><h3>MQTT-Broker</h3><table class="kv">
+      <tr><td>URL</td><td id="sBroker">…</td></tr><tr><td>Status</td><td id="sBrokerState">…</td></tr>
+      <tr><td>Letzter Fehler</td><td id="sBrokerError">–</td></tr></table></div>
+    <div class="card"><h3>Topics</h3><table class="kv">
+      <tr><td><code>jarolift/bridge/state</code></td><td>online | offline</td></tr>
+      <tr><td><code>jarolift/&lt;topic&gt;/state</code></td><td>open | closed | opening | closing</td></tr>
+      <tr><td><code>jarolift/&lt;topic&gt;/position</code></td><td>0–100 (100 = offen)</td></tr>
+      <tr><td><code>jarolift/&lt;topic&gt;/set</code></td><td>OPEN | CLOSE | STOP | SHADE | SETSHADE | 0–100</td></tr>
+      <tr><td><code>jarolift/&lt;topic&gt;/get</code></td><td>Zustand neu senden</td></tr></table>
+      <p class="hint">Gruppen haben nur <code>set</code> und <code>get</code>.</p></div>
+  </div>
+</section>
+
+<section class="page" id="page-log">
+  <div class="card"><div class="row" style="justify-content: space-between"><h2 style="margin:0">Log</h2><label class="row" style="margin:0"><input type="checkbox" id="follow" checked> mitlaufen</label></div>
+  <pre class="log" id="log" style="margin-top:10px"></pre></div>
+</section>
+</main>
+
+<div id="toast"></div>
+<dialog id="confirmDlg"><div class="dbody"><h3 id="cTitle"></h3><p id="cText"></p></div>
+  <div class="dfoot"><button id="cCancel">Abbrechen</button><button class="danger solid" id="cOk">Bestätigen</button></div></dialog>
+<dialog id="wizDlg"><div class="dbody"><h3>Mitglieder auswählen</h3><div class="wiz" id="wizList"></div><div class="mask" id="wizMask"></div></div>
+  <div class="dfoot"><button id="wizCancel">Abbrechen</button><button class="primary" id="wizApply">Übernehmen</button></div></dialog>
+
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const STATE = { open: "offen", closed: "geschlossen", opening: "öffnet", closing: "schließt" };
+const ICON = {
+  up: '<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>',
+  stop: '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>',
+  down: '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
+  shade: '<svg viewBox="0 0 24 24"><path d="M5 5h14M5 9h14M5 13h14M5 17h9"/></svg>',
+};
+
+let toastTimer;
+function toast(text, bad) {
+  const t = $("#toast"); t.textContent = text; t.className = "show" + (bad ? " bad" : "");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = "", 3500);
+}
+function confirmDialog(title, text, okLabel) {
+  return new Promise(resolve => {
+    const d = $("#confirmDlg");
+    $("#cTitle").textContent = title; $("#cText").textContent = text; $("#cOk").textContent = okLabel || "Bestätigen";
+    const done = v => { d.close(); resolve(v); };
+    $("#cOk").onclick = () => done(true); $("#cCancel").onclick = () => done(false);
+    d.oncancel = () => resolve(false);
+    d.showModal();
+  });
+}
+async function api(path, body) {
+  const opt = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  const r = await fetch(path, opt);
+  let data = {};
+  try { data = await r.json(); } catch (e) {}
+  if (!r.ok) { const err = new Error("HTTP " + r.status); err.errors = data.errors || []; throw err; }
+  return data;
+}
+const errText = e => (e.errors || []).map(x => x.message).join("; ") || e.message;
+
+// Topic from a label: "EG Küche Fenster" -> "eg-kueche-fenster"
+function slug(text) {
+  return text.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32).replace(/-+$/, "");
+}
+
+// ---------- navigation ----------
+let page = "shutters";
+function route() {
+  page = (location.hash || "#shutters").slice(1);
+  if (!$("#page-" + page)) page = "shutters";
+  $$("section.page").forEach(s => s.classList.toggle("active", s.id === "page-" + page));
+  $$("nav a").forEach(a => a.classList.toggle("active", a.dataset.page === page));
+  if (page === "settings") loadSettings();
+  if (page === "log") pollLog(true);
+  pollStatus();
+}
+window.addEventListener("hashchange", route);
+try { for (const d of $$("details.sec")) { const v = localStorage.getItem("sec-" + d.dataset.sec); if (v !== null) d.open = v === "1"; } } catch (e) {}
+$$("details.sec").forEach(d => d.addEventListener("toggle", () => { try { localStorage.setItem("sec-" + d.dataset.sec, d.open ? "1" : "0"); } catch (e) {} }));
+
+// ---------- status ----------
+let status = null, cardsKey = "";
+async function pollStatus() {
+  try { status = await api("/api/status"); render(); }
+  catch (e) { $("#brokerDot").className = "dot bad"; $("#brokerPill").textContent = "Gerät nicht erreichbar"; }
+}
+function fmtUptime(s) { const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return (d ? d + " d " : "") + h + " h " + m + " min"; }
+function render() {
+  const s = status;
+  const st = { connected: ["ok", "verbunden"], connecting: ["warn", "verbinde …"], disconnected: ["bad", "getrennt"], disabled: ["", "deaktiviert"] }[s.broker_state] || ["", s.broker_state];
+  $("#brokerDot").className = "dot " + st[0]; $("#brokerPill").textContent = "MQTT " + st[1];
+  const banners = [];
+  if (s.migration && s.migration.active) banners.push(`Übernahme vom alten Dongle (${esc(s.migration.host)}) aktiv – dieses Gerät sendet nichts, bis du die Übernahme unter Einstellungen abschließt.`);
+  if (!s.radio) banners.push("Kein Funkmodul gefunden – Befehle werden nicht gesendet.");
+  $("#banner").innerHTML = banners.join("<br>");
+  $("#sFirmware").textContent = s.firmware; $("#sIp").textContent = s.ip || "–";
+  $("#sNet").textContent = s.network_connected ? "verbunden" : "keine Verbindung";
+  $("#sUptime").textContent = fmtUptime(s.uptime_s); $("#sReset").textContent = s.reset_reason;
+  $("#sRadio").textContent = s.radio ? "CC1101 bereit" : "nicht gefunden";
+  $("#sCounter").textContent = s.counter;
+  $("#sBroker").textContent = s.broker_url || "(deaktiviert)"; $("#sBrokerState").textContent = st[1]; $("#sBrokerError").textContent = s.broker_error || "–";
+  $("#learnModeHint").textContent = "Aktueller Anlernmodus: " + (s.learn_mode_new ? "neu (AUF+AB, dann STOP)." : "alt (LEARN-Telegramm).");
+  renderCertificate(s.certificate);
+  renderMigrationStatus(s.migration);
+  for (const sh of s.shutters) {
+    for (const w of ["open", "close"]) {
+      const inp = $(`#shutterRows .srow[data-ch="${sh.channel}"] [data-d="${w}"]`);
+      if (inp && document.activeElement !== inp && sh[w + "_duration"] !== undefined) inp.value = sh[w + "_duration"].toFixed(1);
+    }
+  }
+  const key = JSON.stringify([s.shutters.map(x => [x.channel, x.name, x.label]), s.groups.map(g => [g.index, g.name, g.label, g.members])]);
+  if (key !== cardsKey) { cardsKey = key; buildCards(); }
+  for (const sh of s.shutters) {
+    const c = $(`#shutterCards .card[data-target="${sh.name}"]`);
+    if (!c) continue;
+    $(".bar > i", c).style.width = sh.position + "%";
+    $(".state", c).textContent = `${STATE[sh.state] || sh.state} · ${sh.position} %`;
+  }
+}
+function controls() {
+  return `<div class="btnrow">
+    <button class="ibtn" data-cmd="OPEN" title="Auf">${ICON.up}</button>
+    <button class="ibtn" data-cmd="STOP" title="Stopp">${ICON.stop}</button>
+    <button class="ibtn" data-cmd="CLOSE" title="Zu">${ICON.down}</button>
+    <button class="ibtn" data-cmd="SHADE" title="Beschattung">${ICON.shade}</button></div>
+    <div class="posrow"><input class="target" type="number" min="0" max="100" placeholder="%" aria-label="Zielposition in Prozent"><button data-cmd="POSITION">Fahren</button></div>`;
+}
+function buildCards() {
+  const s = status;
+  $("#shutterCards").innerHTML = s.shutters.length ? s.shutters.map(sh => `
+    <div class="card" data-target="${esc(sh.name)}">
+      <div class="title">${esc(sh.label || sh.name)}</div><div class="sub">${esc(sh.name)} · Kanal ${sh.channel + 1}</div>
+      <div class="bar"><i style="width:${sh.position}%"></i></div><div class="state"></div>${controls()}</div>`).join("")
+    : '<p class="muted">Noch keine Rollläden – unter Einstellungen → Rollläden einrichten.</p>';
+  $("#groupCards").innerHTML = s.groups.length ? s.groups.map(g => `
+    <div class="card" data-target="${esc(g.name)}">
+      <div class="title">${esc(g.label || g.name)}</div><div class="sub">${esc(g.members.join(", "))}</div>${controls()}</div>`).join("")
+    : '<p class="muted">Noch keine Gruppen – unter Einstellungen → Gruppen anlegen.</p>';
+}
+document.addEventListener("click", async ev => {
+  const btn = ev.target.closest(".cards button[data-cmd]");
+  if (!btn) return;
+  const card = btn.closest(".card"), target = card.dataset.target, cmd = btn.dataset.cmd;
+  const body = { target, command: cmd };
+  if (cmd === "POSITION") {
+    const v = parseInt($(".target", card).value, 10);
+    if (!(v >= 0 && v <= 100)) { toast("Zielposition 0–100 eingeben", true); return; }
+    body.position = v;
+  }
+  try { await api("/api/command", body); toast(`${$(".title", card).textContent}: ${btn.title || btn.textContent}`); setTimeout(pollStatus, 300); }
+  catch (e) { toast(errText(e), true); }
+});
+
+// ---------- settings: shutters ----------
+let settings = null;
+async function loadSettings() {
+  try {
+    settings = await api("/api/settings");
+    renderShutterRows(); renderGroupRows(); fillForms();
+  } catch (e) { toast("Einstellungen konnten nicht geladen werden", true); }
+}
+function durationOf(ch, which) {
+  const sh = status && status.shutters.find(x => x.channel === ch);
+  return sh && sh[which + "_duration"] !== undefined ? sh[which + "_duration"].toFixed(1) : "";
+}
+function renderShutterRows() {
+  $("#shutterRows").innerHTML = settings.channels.map(c => `
+    <div class="srow ${c.enabled ? "" : "off"}" data-ch="${c.channel}">
+      <div class="ch">Kanal ${c.channel + 1}</div>
+      <div><input data-f="label" value="${esc(c.label)}" placeholder="Bezeichnung"><div class="err" data-e="label"></div></div>
+      <div class="topic"><input data-f="name" value="${esc(c.name)}" placeholder="${esc(slug(c.label) || "topic")}" spellcheck="false"><div class="err" data-e="name"></div></div>
+      <div class="dur"><input data-d="open" type="number" min="1" max="300" step="0.1" value="${durationOf(c.channel, "open")}" ${c.enabled ? "" : "disabled"} title="Laufzeit auf (s)"></div>
+      <div class="dur"><input data-d="close" type="number" min="1" max="300" step="0.1" value="${durationOf(c.channel, "close")}" ${c.enabled ? "" : "disabled"} title="Laufzeit zu (s)"></div>
+      <div class="acts">
+        <button data-a="LEARN" ${c.enabled ? "" : "disabled"}>Anlernen</button>
+        <button data-a="UNLEARN" class="danger" ${c.enabled ? "" : "disabled"}>Abmelden</button>
+        <button data-a="SETSHADE" ${c.enabled ? "" : "disabled"} title="aktuelle Position als Beschattung im Motor speichern">Beschattung setzen</button>
+      </div>
+      <div class="sw"><label class="switch" title="aktiv"><input type="checkbox" data-f="enabled" ${c.enabled ? "checked" : ""}><span></span></label></div>
+    </div>`).join("");
+}
+function rowErrors(row, errors, prefix) {
+  $$("[data-e]", row).forEach(e => e.textContent = "");
+  $$(".invalid", row).forEach(e => e.classList.remove("invalid"));
+  const rest = [];
+  for (const e of errors) {
+    const f = e.field.startsWith(prefix) ? e.field.slice(prefix.length) : null;
+    const slot = f && $(`[data-e="${f}"]`, row);
+    if (slot) { slot.textContent = e.message; $(`[data-f="${f}"]`, row)?.classList.add("invalid"); } else rest.push(e.message);
+  }
+  if (rest.length) toast(rest.join("; "), true);
+}
+async function refreshSettings() { settings = await api("/api/settings"); renderGroupRows(); setTimeout(pollStatus, 400); }
+async function saveShutter(row) {
+  const ch = +row.dataset.ch;
+  const enabled = $('[data-f="enabled"]', row).checked;
+  const label = $('[data-f="label"]', row).value.trim();
+  let name = $('[data-f="name"]', row).value.trim();
+  if (enabled && !name) { name = slug(label) || `kanal-${ch + 1}`; $('[data-f="name"]', row).value = name; }
+  try {
+    await api("/api/settings", { channels: [{ channel: ch, enabled, name, label }] });
+    rowErrors(row, [], "");
+    row.classList.toggle("off", !enabled);
+    $$("[data-d], [data-a]", row).forEach(x => x.disabled = !enabled);
+    toast(`Kanal ${ch + 1} gespeichert`);
+    await refreshSettings();
+  } catch (e) { rowErrors(row, e.errors || [{ field: "", message: e.message }], `ch${ch}.`); }
+}
+$("#shutterRows").addEventListener("change", ev => {
+  const row = ev.target.closest(".srow");
+  if (ev.target.dataset.f) return saveShutter(row);
+  if (ev.target.dataset.d) {
+    const ch = +row.dataset.ch, name = settings.channels[ch].name, v = parseFloat(ev.target.value);
+    api("/api/duration", { target: name, which: ev.target.dataset.d, seconds: v })
+      .then(() => toast(`Laufzeit Kanal ${ch + 1} gespeichert`)).catch(e => toast(errText(e), true));
+  }
+});
+$("#shutterRows").addEventListener("keydown", ev => { if (ev.key === "Enter" && ev.target.tagName === "INPUT") ev.target.blur(); });
+$("#shutterRows").addEventListener("click", async ev => {
+  const btn = ev.target.closest("button[data-a]");
+  if (!btn) return;
+  const row = btn.closest(".srow"), ch = +row.dataset.ch, c = settings.channels[ch], a = btn.dataset.a;
+  const who = `Kanal ${ch + 1}${c.label ? " (" + c.label + ")" : ""}`;
+  const texts = {
+    LEARN: [`${who} anlernen?`, "Ist der Motor im Anlernmodus (Anlerntaste gedrückt bzw. Sicherung kurz aus/ein, Motor hat vibriert)? Das Gerät sendet jetzt die Anlernsequenz; jeder Motor im Anlernmodus übernimmt diesen Kanal.", "Anlernen"],
+    UNLEARN: [`${who} abmelden?`, "Sendet die Abmeldesequenz (AUF+AB, 6× STOP, AUF). Jeder Motor, der diesen Kanal kennt, vergisst ihn und reagiert nicht mehr darauf.", "Abmelden"],
+    SETSHADE: [`Beschattung für ${who} setzen?`, "Speichert die aktuelle Position des Motors als Beschattungsposition.", "Setzen"],
+  };
+  if (!await confirmDialog(...texts[a])) return;
+  try { await api("/api/command", { target: c.name, command: a }); toast(`${who}: ${btn.textContent} gesendet`); }
+  catch (e) { toast(errText(e), true); }
+});
+
+// ---------- settings: groups ----------
+const maskOf = members => members.reduce((m, ch) => m | (1 << ch), 0);
+const maskBits = m => { let s = ""; for (let i = 15; i >= 0; i--) { s += (m >> i) & 1 ? "1" : "0"; if (i === 8) s += " "; } return s; };
+function memberNames(members) {
+  return members.map(ch => settings.channels[ch].label || settings.channels[ch].name || `Kanal ${ch + 1}`).join(", ");
+}
+function renderGroupRows() {
+  $("#groupRows").innerHTML = settings.groups.map(g => `
+    <div class="srow grow ${g.enabled ? "" : "off"}" data-g="${g.index}">
+      <div class="sw"><label class="switch" title="aktiv"><input type="checkbox" data-f="enabled" ${g.enabled ? "checked" : ""}><span></span></label></div>
+      <div><input data-f="label" value="${esc(g.label)}" placeholder="Gruppe ${g.index + 1}"><div class="err" data-e="label"></div></div>
+      <div><input data-f="name" value="${esc(g.name)}" placeholder="${esc(slug(g.label) || "topic")}" spellcheck="false"><div class="err" data-e="name"></div></div>
+      <div class="members"><div class="row" style="flex-wrap:nowrap; align-items:flex-start">
+        <div style="flex:1">${g.members.length ? esc(memberNames(g.members)) : '<span class="muted">keine</span>'}<div class="mask">${maskBits(maskOf(g.members))}</div></div>
+        <button data-wiz>Auswählen …</button></div><div class="err" data-e="members"></div></div>
+    </div>`).join("");
+}
+async function saveGroup(row, members) {
+  const g = +row.dataset.g, cur = settings.groups[g];
+  const enabled = $('[data-f="enabled"]', row).checked;
+  const label = $('[data-f="label"]', row).value.trim();
+  let name = $('[data-f="name"]', row).value.trim();
+  if (enabled && !name) { name = slug(label) || `gruppe-${g + 1}`; $('[data-f="name"]', row).value = name; }
+  try {
+    await api("/api/settings", { groups: [{ index: g, enabled, name, label, members: members || cur.members }] });
+    toast(`Gruppe ${g + 1} gespeichert`);
+    await refreshSettings();
+  } catch (e) { rowErrors(row, e.errors || [{ field: "", message: e.message }], `grp${g}.`); }
+}
+$("#groupRows").addEventListener("change", ev => { if (ev.target.dataset.f) saveGroup(ev.target.closest(".srow")); });
+$("#groupRows").addEventListener("keydown", ev => { if (ev.key === "Enter" && ev.target.tagName === "INPUT") ev.target.blur(); });
+$("#groupRows").addEventListener("click", ev => {
+  if (!ev.target.closest("[data-wiz]")) return;
+  const row = ev.target.closest(".srow"), g = +row.dataset.g;
+  const selected = new Set(settings.groups[g].members);
+  const active = settings.channels.filter(c => c.enabled);
+  $("#wizList").innerHTML = active.length ? active.map(c => `
+    <label for="wiz${c.channel}">${esc(c.label || c.name)} <span class="muted">· Kanal ${c.channel + 1}</span></label>
+    <input type="checkbox" id="wiz${c.channel}" data-ch="${c.channel}" ${selected.has(c.channel) ? "checked" : ""}>`).join("")
+    : '<p class="muted">Keine aktiven Rollläden.</p>';
+  const upd = () => $("#wizMask").textContent = maskBits(maskOf($$("#wizList input:checked").map(i => +i.dataset.ch)));
+  $("#wizList").onchange = upd; upd();
+  const d = $("#wizDlg");
+  $("#wizCancel").onclick = () => d.close();
+  $("#wizApply").onclick = () => { d.close(); saveGroup(row, $$("#wizList input:checked").map(i => +i.dataset.ch)); };
+  d.showModal();
+});
+
+// ---------- settings: takeover from the old dongle ----------
+let lastMigrationKey = "";
+function renderMigrationStatus(m) {
+  if (!m) return;
+  const key = JSON.stringify(m) + (status ? status.counter : "");
+  if (key === lastMigrationKey) return;
+  lastMigrationKey = key;
+  $("#migForm").style.display = m.active ? "none" : "";
+  if (!m.active) { $("#migActive").innerHTML = ""; return; }
+  const reach = m.dongle_reachable
+    ? `<span style="color:var(--warn)">noch erreichbar</span> (Zähler ${m.dongle_counter}, geprüft vor ${m.last_check_s_ago} s)`
+    : `<span style="color:var(--ok)">nicht mehr erreichbar</span>`;
+  $("#migActive").innerHTML = `<div class="banner" style="margin:0 0 10px">
+      <b>Übernahme aktiv – Senden gesperrt.</b><br>
+      Dongle ${esc(m.host)}: ${reach}<br>Eigener Zähler: ${status ? status.counter : "…"} (Dongle-Zähler + ${m.margin})</div>
+    <ol class="hint" style="padding-left:18px"><li>Den alten Dongle jetzt dauerhaft ausschalten (Stecker ziehen, beschriften).</li>
+      <li>Sobald er hier als „nicht mehr erreichbar“ erscheint: Übernahme abschließen. Danach sendet dieses Gerät.</li>
+      <li>Einen Rollladen testen (AUF/ZU), dann eine Gruppe.</li></ol>
+    <div class="row"><button class="primary" id="migRelease" ${m.dongle_reachable ? "disabled" : ""}>Übernahme abschließen</button>
+      <button class="danger" id="migForce">Trotzdem freigeben …</button></div>`;
+  $("#migRelease").onclick = async () => {
+    try { await api("/api/migration/release", { force: false }); toast("Übernahme abgeschlossen – Senden freigegeben"); pollStatus(); }
+    catch (e) { toast(errText(e), true); }
+  };
+  $("#migForce").onclick = async () => {
+    if (!await confirmDialog("Senden trotz erreichbarem Dongle freigeben?", "Nur wenn der Dongle sicher aus ist und bloß die Adresse nicht mehr stimmt. Senden beide Geräte, ignorieren die Motoren eines davon und müssen neu angelernt werden.", "Freigeben")) return;
+    try { await api("/api/migration/release", { force: true }); toast("Senden freigegeben"); pollStatus(); } catch (e) { toast(errText(e), true); }
+  };
+}
+$("#migRead").addEventListener("click", async () => {
+  const host = $("#migHost").value.trim() || "192.0.2.20";
+  $("#migHostErr").textContent = ""; $("#migRead").disabled = true; $("#migPreview").innerHTML = '<p class="hint">Lese Dongle …</p>';
+  try {
+    const d = await api("/api/migration/read", { host });
+    const names = d.channel_names.map((n, i) => n ? `<tr><td>Kanal ${i + 1}</td><td>${esc(n)}</td></tr>` : "").join("");
+    $("#migPreview").innerHTML = `<h3 style="margin-top:14px">Gelesen von ${esc(d.host)}</h3>
+      <table class="kv"><tr><td>Master-Key</td><td>${d.master_key_found ? "gefunden (wird nicht angezeigt)" : "<b>fehlt</b>"}</td></tr>
+      <tr><td>Seriennummer-Präfix</td><td>${esc(d.serial_prefix)}</td></tr>
+      <tr><td>Anlernmodus</td><td>${d.learn_mode_new ? "neu" : "alt"}</td></tr>
+      <tr><td>Zähler des Dongles</td><td>${d.device_counter}</td></tr>${names}</table>
+      <div class="row" style="margin-top:10px; align-items:flex-end">
+        <div class="field" style="width:170px; margin:0"><label for="migMargin">Sicherheitsabstand</label><input id="migMargin" type="number" min="1" max="64" value="8"></div>
+        <label class="row" style="margin:0 0 8px"><input type="checkbox" id="migLabels" checked> Kanalnamen als Bezeichnungen übernehmen</label>
+      </div>
+      <button class="primary" id="migApply" style="margin-top:10px">Übernehmen</button>`;
+    $("#migApply").onclick = async () => {
+      if (!await confirmDialog("Identität vom Dongle übernehmen?", "Master-Key, Präfix, Anlernmodus und Zähler werden übernommen. Danach sendet dieses Gerät nichts, bis der Dongle dauerhaft aus ist und du die Übernahme abschließt.", "Übernehmen")) return;
+      try {
+        await api("/api/migration/apply", { margin: parseInt($("#migMargin").value, 10), labels: $("#migLabels").checked });
+        $("#migPreview").innerHTML = ""; toast("Übernommen – Senden gesperrt bis zum Abschluss");
+        setTimeout(() => { pollStatus(); loadSettings(); }, 800);
+      } catch (e) { toast(errText(e), true); }
+    };
+  } catch (e) { $("#migPreview").innerHTML = ""; $("#migHostErr").textContent = errText(e); }
+  $("#migRead").disabled = false;
+});
+
+// ---------- settings: forms ----------
+function showErrors(form, errors) {
+  $$("[data-err]", form).forEach(e => e.textContent = "");
+  $$(".invalid", form).forEach(e => e.classList.remove("invalid"));
+  const rest = [];
+  for (const e of errors) {
+    const slot = $(`[data-err="${e.field}"]`, form);
+    if (slot) { slot.textContent = e.message; form.elements[e.field]?.classList.add("invalid"); } else rest.push(e.message);
+  }
+  if (rest.length) toast(rest.join("; "), true); else if (errors.length) toast("Bitte die markierten Felder prüfen.", true);
+}
+document.addEventListener("input", ev => {
+  const el = ev.target; if (!el.name || !el.form) return;
+  el.classList.remove("invalid"); const slot = $(`[data-err="${el.name}"]`, el.form); if (slot) slot.textContent = "";
+});
+function fillForms() {
+  const s = settings, f1 = $("#netForm"), f2 = $("#mqttForm"), f3 = $("#jaroForm");
+  f1.dhcp.checked = s.dhcp; for (const k of ["ip", "subnet", "gateway", "dns"]) f1[k].value = s[k]; toggleStatic();
+  for (const k of ["broker_url", "mqtt_username", "client_id", "ca_certificate"]) f2[k].value = s[k];
+  f2.mqtt_password.value = ""; $("#pwHint").textContent = s.mqtt_password_set ? "Ein Passwort ist gesetzt." : "Kein Passwort gesetzt.";
+  f3.master_msb.value = f3.master_lsb.value = "";
+  $("#keyHint").textContent = s.master_key_set ? "Ein Master-Key ist gesetzt. Er wird nie angezeigt; leer lassen, um ihn zu behalten." : "Kein Master-Key gesetzt.";
+  f3.learn_mode_new.value = String(s.learn_mode_new); f3.serial_prefix.value = s.serial_prefix;
+  if (status) $("#counter").value = status.counter;
+  toggleCa();
+}
+function toggleStatic() { $$("#staticFields input").forEach(i => i.disabled = $("#dhcp").checked); $("#staticFields").style.opacity = $("#dhcp").checked ? .5 : 1; }
+function toggleCa() { const u = $("#broker_url").value.trim().toLowerCase(); $("#caField").style.display = (u.startsWith("mqtts://") || u.startsWith("wss://")) ? "" : "none"; }
+$("#dhcp").addEventListener("change", toggleStatic);
+$("#broker_url").addEventListener("input", toggleCa);
+async function save(form, body, okText) {
+  try { const r = await api("/api/settings", body); showErrors(form, []); toast(okText + (r.restart_required ? " – Neustart nötig" : "")); loadSettings(); }
+  catch (e) { showErrors(form, e.errors || [{ field: "", message: e.message }]); }
+}
+$("#netForm").addEventListener("submit", ev => {
+  ev.preventDefault(); const f = ev.target, body = { dhcp: f.dhcp.checked };
+  if (!f.dhcp.checked) for (const k of ["ip", "subnet", "gateway", "dns"]) body[k] = f[k].value.trim();
+  save(f, body, "Netzwerk gespeichert");
+});
+$("#mqttForm").addEventListener("submit", ev => {
+  ev.preventDefault(); const f = ev.target;
+  const body = { broker_url: f.broker_url.value.trim(), mqtt_username: f.mqtt_username.value, client_id: f.client_id.value.trim(), ca_certificate: f.ca_certificate.value.trim() ? f.ca_certificate.value.trim() + "\n" : "" };
+  if (f.mqtt_password.value) body.mqtt_password = f.mqtt_password.value;
+  save(f, body, "Broker gespeichert, verbinde neu");
+});
+$("#clearPw").addEventListener("click", async () => {
+  if (await confirmDialog("Passwort löschen?", "Das Gerät verbindet sich danach ohne Passwort.", "Löschen")) save($("#mqttForm"), { mqtt_password: "" }, "Passwort gelöscht");
+});
+$("#jaroForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const f = ev.target, body = { learn_mode_new: f.learn_mode_new.value === "true" };
+  if (f.master_msb.value.trim()) body.master_msb = f.master_msb.value.trim();
+  if (f.master_lsb.value.trim()) body.master_lsb = f.master_lsb.value.trim();
+  const prefix = f.serial_prefix.value.trim();
+  if (prefix.toLowerCase() !== settings.serial_prefix.toLowerCase()) {
+    if (!await confirmDialog("Seriennummer-Präfix ändern?", "Alle Kanäle bekommen neue Seriennummern. Danach muss JEDER Motor neu angelernt werden.", "Präfix ändern")) return;
+    body.serial_prefix = prefix; body.confirm_regenerate_serials = true;
+  }
+  save(f, body, "Jarolift-Einstellungen gespeichert");
+});
+$("#counterForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const f = ev.target, v = parseInt(f.counter.value, 10);
+  const lower = status && v < status.counter;
+  if (lower && !await confirmDialog("Zähler senken?", "Motoren ignorieren dann möglicherweise alle Befehle und müssen neu angelernt werden.", "Trotzdem senken")) return;
+  try { await api("/api/counter", { counter: v, confirm_lower: !!lower }); showErrors(f, []); toast("Zähler gesetzt"); setTimeout(pollStatus, 400); }
+  catch (e) { showErrors(f, e.errors || []); }
+});
+function renderCertificate(c) {
+  if (!c) return;
+  $("#tSubject").textContent = c.subject; $("#tIssuer").textContent = c.self_signed ? c.issuer + " (selbstsigniert)" : c.issuer; $("#tExpiry").textContent = c.not_after;
+}
+$("#tlsForm").addEventListener("submit", async ev => {
+  ev.preventDefault(); const f = ev.target;
+  try {
+    const r = await api("/api/tls", { certificate: f.certificate.value.trim() + "\n", private_key: f.private_key.value.trim() + "\n" });
+    showErrors(f, []); f.certificate.value = f.private_key.value = ""; renderCertificate(r.certificate); toast("Zertifikat installiert – gilt für neue Verbindungen");
+  } catch (e) { showErrors(f, e.errors || [{ field: "", message: e.message }]); }
+});
+$("#restart").addEventListener("click", async () => {
+  if (!await confirmDialog("Gerät neu starten?", "Dauert etwa 20 Sekunden. Es wird dabei nichts gesendet.", "Neu starten")) return;
+  try { await api("/api/restart", {}); toast("Startet neu …"); } catch (e) { toast(e.message, true); }
+});
+
+// ---------- log ----------
+let logLast = 0, logTimer = null;
+async function pollLog(reset) {
+  clearTimeout(logTimer);
+  if (page !== "log") return;
+  if (reset) { logLast = 0; $("#log").textContent = ""; }
+  try {
+    const r = await fetch("/log?after=" + logLast), text = await r.text();
+    logLast = parseInt(r.headers.get("X-Log-Last") || logLast, 10);
+    if (text) { const pre = $("#log"); pre.textContent += text; if (pre.textContent.length > 200000) pre.textContent = pre.textContent.slice(-150000); if ($("#follow").checked) pre.scrollTop = pre.scrollHeight; }
+  } catch (e) {}
+  logTimer = setTimeout(pollLog, 1500);
+}
+
+route();
+setInterval(() => { if (page !== "log") pollStatus(); }, 1500);
+</script>
+</body>
+</html>

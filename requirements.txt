@@ -1,0 +1,3 @@
+# Pinned: design.md risk "ESPHome upgrades change time_based internals".
+# Re-verify set_open_duration/set_close_duration and has_built_in_endstop before bumping.
+esphome==2026.9.0

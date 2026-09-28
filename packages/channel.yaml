@@ -1,0 +1,45 @@
+# Hardware of one channel slot: a time-based cover plus runtime travel times. Whether the slot is a
+# shutter, a group or unused is decided at runtime by the channel layout (web interface).
+# vars: channel (0..15)
+cover:
+  - platform: time_based
+    id: ch${channel}_cover
+    name: ch${channel}
+    # Moves to 0/100 send no STOP; the motor stops at its limit and the estimate resets exactly.
+    has_built_in_endstop: true
+    # false: an endpoint command must not first jump the estimate to the opposite end.
+    manual_control: false
+    open_duration: 20s
+    close_duration: 20s
+    open_action:
+      - lambda: id(jarolift_hub).on_cover_action(${channel}, esphome::jarolift::Command::UP);
+    close_action:
+      - lambda: id(jarolift_hub).on_cover_action(${channel}, esphome::jarolift::Command::DOWN);
+    stop_action:
+      - lambda: id(jarolift_hub).on_cover_action(${channel}, esphome::jarolift::Command::STOP);
+
+number:
+  - platform: template
+    id: ch${channel}_open_duration
+    name: ch${channel} open duration
+    unit_of_measurement: s
+    min_value: 1
+    max_value: 300
+    step: 0.1
+    initial_value: 20
+    restore_value: true
+    optimistic: true
+    set_action:
+      - lambda: id(jarolift_hub).set_duration(${channel}, true, x);
+  - platform: template
+    id: ch${channel}_close_duration
+    name: ch${channel} close duration
+    unit_of_measurement: s
+    min_value: 1
+    max_value: 300
+    step: 0.1
+    initial_value: 20
+    restore_value: true
+    optimistic: true
+    set_action:
+      - lambda: id(jarolift_hub).set_duration(${channel}, false, x);
